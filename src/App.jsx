@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as webllm from "@mlc-ai/web-llm";
+import { GrUploadOption } from "react-icons/gr";
 
 const App = () => {
   const [input, setInput] = useState('');
@@ -20,13 +21,13 @@ const App = () => {
     "RedPajama-INCITE-Chat-3B-v1-q4f16_1-MLC"
   ];
 
-  useEffect(() => {
-    if (!model) return;
-    setEngine(null);
-    webllm.CreateMLCEngine(model, {
-      initProgressCallback: (progress) => console.log("initProgress", progress),
-    }).then(setEngine);
-  }, [model]);
+  // useEffect(() => {
+  //   if (!model) return;
+  //   setEngine(null);
+  //   webllm.CreateMLCEngine(model, {
+  //     initProgressCallback: (progress) => console.log("initProgress", progress),
+  //   }).then(setEngine);
+  // }, [model]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -166,9 +167,10 @@ const App = () => {
           <button
             onClick={sendMessageToLLM}
             disabled={isTyping}
-            className={`lg:h-12 lg:w-30 h-12 text-sm justify-center items-center px-6 border rounded-2xl bg-neutral-800 hover:bg-neutral-700 transition-all ${isExpanded ? 'self-end mt-2' : 'self-center'}`}
+            className={`justify-center items-center rounded-full bg-neutral-800 hover:bg-neutral-700 transition-all ${isExpanded ? 'self-end mt-2' : 'self-center'}`}
           >
-            {isTyping ? "..." : "Send"}
+            
+            {isTyping ? "..." : <GrUploadOption className=' text-4xl'/>}
           </button>
         </div>
       </div>
