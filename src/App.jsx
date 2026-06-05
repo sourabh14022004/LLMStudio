@@ -21,13 +21,13 @@ const App = () => {
     "RedPajama-INCITE-Chat-3B-v1-q4f16_1-MLC"
   ];
 
-  // useEffect(() => {
-  //   if (!model) return;
-  //   setEngine(null);
-  //   webllm.CreateMLCEngine(model, {
-  //     initProgressCallback: (progress) => console.log("initProgress", progress),
-  //   }).then(setEngine);
-  // }, [model]);
+  useEffect(() => {
+    if (!model) return;
+    setEngine(null);
+    webllm.CreateMLCEngine(model, {
+      initProgressCallback: (progress) => console.log("initProgress", progress),
+    }).then(setEngine);
+  }, [model]);
 
   useEffect(() => {
     if (textareaRef.current) {
