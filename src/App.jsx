@@ -412,8 +412,67 @@ const App = () => {
           </button>
         </div>
 
-        {/* New Chat Button */}
+        {/* Model Selector — above New Chat, dropdown opens downward */}
         <div className="px-3 pt-3 pb-1 shrink-0">
+          <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest px-1">Model</label>
+          <div className="relative mt-1">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="w-full flex items-center justify-between p-2.5 rounded-xl glass-input text-sm text-left font-medium hover:bg-white/5 transition-all text-white"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <FiCpu className="text-indigo-400 shrink-0 w-3.5 h-3.5" />
+                <div className="min-w-0">
+                  <div className="text-white text-xs font-semibold truncate">
+                    {currentModelInfo?.label || activeChat.model.split('-')[0]}
+                  </div>
+                  <div className="text-slate-500 text-[10px] truncate">{currentModelInfo?.size || ''}</div>
+                </div>
+              </div>
+              <svg className={`w-3.5 h-3.5 shrink-0 transition-transform text-slate-400 ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute left-0 right-0 top-full mt-1 rounded-xl glass-dropdown z-50 shadow-2xl border border-white/10 max-h-72 overflow-y-auto custom-scroll">
+                {modelCatalog.map((family, fi) => (
+                  <div key={fi}>
+                    <div className="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                      {family.family}
+                    </div>
+                    {family.models.map((m, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          updateActiveChat(() => ({ model: m.id }));
+                          setDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2.5 text-left hover:bg-indigo-600/15 transition-colors flex items-center gap-3 ${
+                          activeChat.model === m.id ? 'bg-indigo-600/25' : ''
+                        }`}
+                      >
+                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${activeChat.model === m.id ? 'bg-indigo-400' : 'bg-transparent'}`} />
+                        <div className="min-w-0 flex-1">
+                          <div className={`text-xs font-semibold truncate ${activeChat.model === m.id ? 'text-indigo-300' : 'text-slate-200'}`}>
+                            {m.label}
+                          </div>
+                          <div className="text-[10px] text-slate-500 truncate">{m.desc}</div>
+                        </div>
+                        <span className="text-[9px] text-slate-600 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-md shrink-0 font-mono">
+                          {m.size}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* New Chat Button */}
+        <div className="px-3 pt-2 pb-1 shrink-0">
           <button
             id="new-chat-btn"
             onClick={createChat}
@@ -488,65 +547,6 @@ const App = () => {
 
         {/* Settings Section */}
         <div className="flex-shrink-0 border-t border-white/10 p-3 space-y-3 overflow-y-auto custom-scroll max-h-[45vh]">
-          {/* Model Selection */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Model</label>
-            <div className="relative">
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl glass-input text-sm text-left font-medium hover:bg-white/5 transition-all text-white"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <FiCpu className="text-indigo-400 shrink-0 w-3.5 h-3.5" />
-                  <div className="min-w-0">
-                    <div className="text-white text-xs font-semibold truncate">
-                      {currentModelInfo?.label || activeChat.model.split('-')[0]}
-                    </div>
-                    <div className="text-slate-500 text-[10px] truncate">{currentModelInfo?.size || ''}</div>
-                  </div>
-                </div>
-                <svg className={`w-3.5 h-3.5 shrink-0 transition-transform text-slate-400 ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {dropdownOpen && (
-                <div className="absolute left-0 right-0 bottom-full mb-2 rounded-xl glass-dropdown z-50 shadow-2xl border border-white/10 max-h-64 overflow-y-auto custom-scroll">
-                  {modelCatalog.map((family, fi) => (
-                    <div key={fi}>
-                      <div className="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                        {family.family}
-                      </div>
-                      {family.models.map((m, i) => (
-                        <button
-                          key={i}
-                          onClick={() => {
-                            updateActiveChat(() => ({ model: m.id }));
-                            setDropdownOpen(false);
-                          }}
-                          className={`w-full px-3 py-2.5 text-left hover:bg-indigo-600/15 transition-colors flex items-center gap-3 ${
-                            activeChat.model === m.id ? 'bg-indigo-600/25' : ''
-                          }`}
-                        >
-                          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${activeChat.model === m.id ? 'bg-indigo-400' : 'bg-transparent'}`} />
-                          <div className="min-w-0 flex-1">
-                            <div className={`text-xs font-semibold truncate ${activeChat.model === m.id ? 'text-indigo-300' : 'text-slate-200'}`}>
-                              {m.label}
-                            </div>
-                            <div className="text-[10px] text-slate-500 truncate">{m.desc}</div>
-                          </div>
-                          <span className="text-[9px] text-slate-600 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-md shrink-0 font-mono">
-                            {m.size}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* System Prompt */}
           <div className="space-y-1.5">
             <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">System Prompt</label>
