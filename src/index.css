@@ -109,4 +109,18 @@
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+/* Gemini Sparkle Glow Animation */
+@keyframes pulseGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.4)) drop-shadow(0 0 10px rgba(168, 85, 247, 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6)) drop-shadow(0 0 16px rgba(168, 85, 247, 0.4));
+  }
+}
+
+.gemini-sparkle {
+  animation: pulseGlow 4s infinite ease-in-out;
 }

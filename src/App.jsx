@@ -14,8 +14,12 @@ import {
   FiPlus,
   FiEdit2,
   FiMessageSquare,
+  FiSearch,
+  FiClock,
+  FiBookOpen,
+  FiGrid,
 } from 'react-icons/fi';
-import { RiSparkling2Line, RiRobot2Line, RiUser3Line } from 'react-icons/ri';
+import { RiRobot2Line, RiUser3Line } from 'react-icons/ri';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const genId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -23,6 +27,29 @@ const genId = () => Math.random().toString(36).slice(2, 10) + Date.now().toStrin
 const DEFAULT_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 const DEFAULT_SYSTEM_PROMPT =
   'You are a helpful, respectful, and honest assistant. Answer as briefly and accurately as possible.';
+
+const SparkleLogo = ({ className = "w-6 h-6" }) => (
+  <svg
+    viewBox="0 0 48 48"
+    className={`${className} gemini-sparkle`}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <linearGradient id="geminiSparkGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#2b57e7" />
+        <stop offset="30%" stopColor="#46a0eb" />
+        <stop offset="65%" stopColor="#f86b72" />
+        <stop offset="90%" stopColor="#f8a25c" />
+        <stop offset="100%" stopColor="#f1d072" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M24 4C24 15 15 24 4 24C15 24 24 33 24 44C24 33 33 24 44 24C33 24 24 15 24 4Z"
+      fill="url(#geminiSparkGrad)"
+    />
+  </svg>
+);
 
 const createNewChat = (overrides = {}) => ({
   id: genId(),
@@ -70,13 +97,16 @@ const App = () => {
   // ── UI states ────────────────────────────────────────────────────────────
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState('');
+  const [chatFilter, setChatFilter] = useState('');
 
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
   const renameInputRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   // ── Model catalog ────────────────────────────────────────────────────────
   const modelCatalog = [
@@ -246,6 +276,32 @@ const App = () => {
     setSidebarOpen(false);
   };
 
+  const handleSearchClick = () => {
+    setSidebarCollapsed(false);
+    setTimeout(() => searchInputRef.current?.focus(), 100);
+  };
+
+  const handlePromptsClick = () => {
+    setSidebarCollapsed(false);
+    setTimeout(() => {
+      const textarea = document.querySelector('textarea[placeholder*="personality"]');
+      textarea?.focus();
+    }, 100);
+  };
+
+  const handleModelsClick = () => {
+    setSidebarCollapsed(false);
+    setDropdownOpen(true);
+  };
+
+  const handleSettingsClick = () => {
+    setSidebarCollapsed(false);
+    setTimeout(() => {
+      const textarea = document.querySelector('textarea[placeholder*="personality"]');
+      textarea?.focus();
+    }, 100);
+  };
+
   const deleteChat = (id) => {
     setChats(prev => {
       const remaining = prev.filter(c => c.id !== id);
@@ -368,6 +424,11 @@ const App = () => {
   // ── Current model info ───────────────────────────────────────────────────
   const currentModelInfo = availableModels.find(m => m.id === activeChat.model);
 
+  // ── Filtered chats list ──────────────────────────────────────────────────
+  const filteredChats = chats.filter(c => 
+    c.title.toLowerCase().includes(chatFilter.toLowerCase())
+  );
+
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#030014] text-slate-300 font-sans antialiased">
@@ -386,195 +447,355 @@ const App = () => {
       )}
 
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
-      <div className={`fixed inset-y-0 left-0 z-40 w-72 glass-panel border-r border-white/10 flex flex-col transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative`}>
+      <div className={`fixed inset-y-0 left-0 z-40 bg-[#090714] border-r border-white/10 flex flex-col transform transition-all duration-300 ease-in-out
+        lg:translate-x-0 lg:relative
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        ${sidebarCollapsed ? 'lg:w-[68px]' : 'lg:w-72'}
+        w-72
+      `}>
+        
+        {/* COLLAPSED ICON RAIL (Desktop Only) */}
+        {sidebarCollapsed && (
+          <div className="hidden lg:flex flex-col items-center justify-between py-4 flex-1 select-none">
+            <div className="flex flex-col items-center gap-5 w-full">
+              {/* Logo Button (Expands sidebar on click) */}
+              <button 
+                onClick={() => setSidebarCollapsed(false)}
+                className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-xl transition-all cursor-pointer"
+                title="Expand Sidebar"
+              >
+                <SparkleLogo className="w-6 h-6" />
+              </button>
 
-        {/* Sidebar Header */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 glow-indigo">
-              <RiSparkling2Line className="text-lg text-white animate-pulse" />
-            </div>
-            <div>
-              <h1 className="text-sm font-bold text-white tracking-wide">LLM Studio</h1>
-              <div className="flex items-center gap-1.5">
-                <span className={`w-1.5 h-1.5 rounded-full ${engine ? 'bg-green-400 animate-pulse' : (isLoading ? 'bg-yellow-400 animate-pulse' : 'bg-red-400')}`} />
-                <span className="text-[10px] text-slate-400 font-medium font-mono">
-                  {engine ? 'Ready' : (isLoading ? 'Downloading...' : 'Not Initialized')}
-                </span>
+              {/* Compose/New Chat Button */}
+              <button
+                onClick={createChat}
+                className="w-11 h-11 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-all shadow-md group cursor-pointer"
+                title="New Chat"
+              >
+                <FiEdit2 className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              </button>
+
+              {/* Navigation icons */}
+              <div className="flex flex-col items-center gap-3.5 w-full px-2 mt-4">
+                <button
+                  onClick={handleSearchClick}
+                  className="w-10 h-10 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                  title="Search Chats"
+                >
+                  <FiSearch className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setSidebarCollapsed(false)}
+                  className="w-10 h-10 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                  title="Chat History"
+                >
+                  <FiClock className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={handlePromptsClick}
+                  className="w-10 h-10 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                  title="System Prompt"
+                >
+                  <FiBookOpen className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={handleModelsClick}
+                  className="w-10 h-10 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                  title="Model Selector"
+                >
+                  <FiGrid className="w-5 h-5" />
+                </button>
               </div>
             </div>
-          </div>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
-          >
-            <FiX className="w-4 h-4" />
-          </button>
-        </div>
 
-        {/* Model Selector — above New Chat, dropdown opens downward */}
-        <div className="px-3 pt-3 pb-1 shrink-0">
-          <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest px-1">Model</label>
-          <div className="relative mt-1">
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="w-full flex items-center justify-between p-2.5 rounded-xl glass-input text-sm text-left font-medium hover:bg-white/5 transition-all text-white"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <FiCpu className="text-indigo-400 shrink-0 w-3.5 h-3.5" />
-                <div className="min-w-0">
-                  <div className="text-white text-xs font-semibold truncate">
-                    {currentModelInfo?.label || activeChat.model.split('-')[0]}
-                  </div>
-                  <div className="text-slate-500 text-[10px] truncate">{currentModelInfo?.size || ''}</div>
+            {/* Bottom items */}
+            <div className="flex flex-col items-center gap-4.5 w-full">
+              <button
+                onClick={handleSettingsClick}
+                className="relative w-10 h-10 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                title="Settings"
+              >
+                <FiSettings className="w-5 h-5" />
+                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-blue-500 rounded-full border border-[#090714] shadow-sm animate-pulse" />
+              </button>
+
+              <img
+                src="/avatar.png"
+                alt="Avatar"
+                className="w-8 h-8 rounded-full border border-white/10 hover:border-indigo-400/50 transition-all cursor-pointer shadow-md object-cover"
+                title="Local Developer"
+                onClick={() => setSidebarCollapsed(false)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* EXPANDED SIDEBAR */}
+        <div className={`flex flex-col flex-1 overflow-hidden transition-all duration-300 ${sidebarCollapsed ? 'lg:hidden' : ''}`}>
+          {/* Sidebar Header */}
+          <div className="p-4 border-b border-white/10 flex items-center justify-between shrink-0 overflow-hidden">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <SparkleLogo className="w-6 h-6" />
+              <div className="min-w-0">
+                <h1 className="text-sm font-bold text-white tracking-wide">LLM Studio</h1>
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${engine ? 'bg-green-400 animate-pulse' : (isLoading ? 'bg-yellow-400 animate-pulse' : 'bg-red-400')}`} />
+                  <span className="text-[10px] text-slate-400 font-medium font-mono">
+                    {engine ? 'Ready' : (isLoading ? 'Downloading...' : 'Not Initialized')}
+                  </span>
                 </div>
               </div>
-              <svg className={`w-3.5 h-3.5 shrink-0 transition-transform text-slate-400 ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              {/* Desktop collapse toggle */}
+              <button
+                onClick={() => setSidebarCollapsed(v => !v)}
+                className="hidden lg:flex p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              >
+                <svg
+                  className={`w-4 h-4 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
+                </svg>
+              </button>
+              {/* Mobile close button */}
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="lg:hidden p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <FiX className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
 
-            {dropdownOpen && (
-              <div className="absolute left-0 right-0 top-full mt-1 rounded-xl glass-dropdown z-50 shadow-2xl border border-white/10 max-h-72 overflow-y-auto custom-scroll">
-                {modelCatalog.map((family, fi) => (
-                  <div key={fi}>
-                    <div className="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                      {family.family}
+          {/* Model Selector Section */}
+          <div className="px-3 pt-3 pb-1 shrink-0">
+            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest px-1">Model</label>
+            <div className="relative mt-1">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="w-full flex items-center justify-between p-2.5 rounded-xl glass-input text-sm text-left font-medium hover:bg-white/5 transition-all text-white cursor-pointer"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <FiCpu className="text-indigo-400 shrink-0 w-3.5 h-3.5" />
+                  <div className="min-w-0">
+                    <div className="text-white text-xs font-semibold truncate">
+                      {currentModelInfo?.label || activeChat.model.split('-')[0]}
                     </div>
-                    {family.models.map((m, i) => (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          updateActiveChat(() => ({ model: m.id }));
-                          setDropdownOpen(false);
-                        }}
-                        className={`w-full px-3 py-2.5 text-left hover:bg-indigo-600/15 transition-colors flex items-center gap-3 ${
-                          activeChat.model === m.id ? 'bg-indigo-600/25' : ''
-                        }`}
-                      >
-                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${activeChat.model === m.id ? 'bg-indigo-400' : 'bg-transparent'}`} />
-                        <div className="min-w-0 flex-1">
-                          <div className={`text-xs font-semibold truncate ${activeChat.model === m.id ? 'text-indigo-300' : 'text-slate-200'}`}>
-                            {m.label}
-                          </div>
-                          <div className="text-[10px] text-slate-500 truncate">{m.desc}</div>
-                        </div>
-                        <span className="text-[9px] text-slate-600 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-md shrink-0 font-mono">
-                          {m.size}
-                        </span>
-                      </button>
-                    ))}
+                    <div className="text-slate-500 text-[10px] truncate">{currentModelInfo?.size || ''}</div>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+                <svg className={`w-3.5 h-3.5 shrink-0 transition-transform text-slate-400 ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {dropdownOpen && (
+                <div className="absolute left-0 right-0 top-full mt-1 rounded-xl glass-dropdown z-50 shadow-2xl border border-white/10 max-h-72 overflow-y-auto custom-scroll">
+                  {modelCatalog.map((family, fi) => (
+                    <div key={fi}>
+                      <div className="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        {family.family}
+                      </div>
+                      {family.models.map((m, i) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            updateActiveChat(() => ({ model: m.id }));
+                            setDropdownOpen(false);
+                          }}
+                          className={`w-full px-3 py-2.5 text-left hover:bg-indigo-600/15 transition-colors flex items-center gap-3 cursor-pointer ${
+                            activeChat.model === m.id ? 'bg-indigo-600/25' : ''
+                          }`}
+                        >
+                          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${activeChat.model === m.id ? 'bg-indigo-400' : 'bg-transparent'}`} />
+                          <div className="min-w-0 flex-1">
+                            <div className={`text-xs font-semibold truncate ${activeChat.model === m.id ? 'text-indigo-300' : 'text-slate-200'}`}>
+                              {m.label}
+                            </div>
+                            <div className="text-[10px] text-slate-500 truncate">{m.desc}</div>
+                          </div>
+                          <span className="text-[9px] text-slate-600 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded-md shrink-0 font-mono">
+                            {m.size}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* New Chat Button */}
-        <div className="px-3 pt-2 pb-1 shrink-0">
-          <button
-            id="new-chat-btn"
-            onClick={createChat}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-dashed border-indigo-500/40 hover:border-indigo-400/70 hover:bg-indigo-600/10 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-all cursor-pointer group"
-          >
-            <FiPlus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200" />
-            New Chat
-          </button>
-        </div>
-
-        {/* Chat List */}
-        <div className="flex-1 overflow-y-auto custom-scroll px-2 py-2 space-y-0.5">
-          <div className="px-2 pb-1 pt-1">
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Chats</span>
+          {/* Search Input */}
+          <div className="px-3 pt-2 pb-1 shrink-0">
+            <div className="relative flex items-center">
+              <FiSearch className="absolute left-3 text-slate-500 w-3.5 h-3.5" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={chatFilter}
+                onChange={e => setChatFilter(e.target.value)}
+                placeholder="Search chats..."
+                className="w-full pl-9 pr-8 py-2 rounded-xl bg-black/30 border border-white/5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500/40 placeholder-slate-500"
+              />
+              {chatFilter && (
+                <button
+                  onClick={() => setChatFilter('')}
+                  className="absolute right-2.5 p-0.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer"
+                >
+                  <FiX className="w-3 h-3" />
+                </button>
+              )}
+            </div>
           </div>
 
-          {chats.map((chat) => (
-            <div
-              key={chat.id}
-              className={`chat-item group flex items-center gap-2 rounded-xl px-2.5 py-2 cursor-pointer transition-all duration-150 ${
-                chat.id === activeChatId ? 'chat-item-active' : 'hover:bg-white/5'
-              }`}
-              onClick={() => {
-                if (renamingId !== chat.id) {
-                  setActiveChatId(chat.id);
-                  setSidebarOpen(false);
-                  setDropdownOpen(false);
-                }
-              }}
+          {/* New Chat Button */}
+          <div className="px-3 pt-1 pb-1 shrink-0">
+            <button
+              id="new-chat-btn"
+              onClick={createChat}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-dashed border-indigo-500/40 hover:border-indigo-400/70 hover:bg-indigo-600/10 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-all cursor-pointer group"
             >
-              <FiMessageSquare className={`w-3.5 h-3.5 shrink-0 ${chat.id === activeChatId ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-400'}`} />
+              <FiPlus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200" />
+              New Chat
+            </button>
+          </div>
 
-              {renamingId === chat.id ? (
-                <input
-                  ref={renameInputRef}
-                  value={renameValue}
-                  onChange={e => setRenameValue(e.target.value)}
-                  onBlur={commitRename}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') commitRename();
-                    if (e.key === 'Escape') setRenamingId(null);
-                  }}
-                  onClick={e => e.stopPropagation()}
-                  className="rename-input flex-1 min-w-0 text-xs text-white"
-                />
-              ) : (
-                <span className={`flex-1 min-w-0 text-xs truncate ${chat.id === activeChatId ? 'text-white font-medium' : 'text-slate-400 group-hover:text-slate-300'}`}>
-                  {chat.title}
+          {/* Chat List */}
+          <div className="flex-1 overflow-y-auto custom-scroll px-2 py-2 space-y-0.5">
+            <div className="px-2 pb-1 pt-1 flex items-center justify-between">
+              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Chats</span>
+              {chatFilter && (
+                <span className="text-[9px] text-slate-500 font-medium bg-white/5 px-1.5 py-0.5 rounded-md">
+                  {filteredChats.length} found
                 </span>
               )}
+            </div>
 
-              {/* Action buttons — shown on hover or active */}
-              <div className={`flex items-center gap-0.5 shrink-0 transition-opacity ${chat.id === activeChatId ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                <button
-                  title="Rename"
-                  onClick={e => { e.stopPropagation(); startRename(chat); }}
-                  className="p-1 rounded-md hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+            {filteredChats.length === 0 ? (
+              <div className="text-center py-6 text-xs text-slate-500 font-medium">
+                {chatFilter ? 'No chats found' : 'No chats yet'}
+              </div>
+            ) : (
+              filteredChats.map((chat) => (
+                <div
+                  key={chat.id}
+                  className={`chat-item group flex items-center gap-2 rounded-xl px-2.5 py-2 cursor-pointer transition-all duration-150 ${
+                    chat.id === activeChatId ? 'chat-item-active' : 'hover:bg-white/5'
+                  }`}
+                  onClick={() => {
+                    if (renamingId !== chat.id) {
+                      setActiveChatId(chat.id);
+                      setSidebarOpen(false);
+                      setDropdownOpen(false);
+                    }
+                  }}
                 >
-                  <FiEdit2 className="w-3 h-3" />
-                </button>
+                  <FiMessageSquare className={`w-3.5 h-3.5 shrink-0 ${chat.id === activeChatId ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-400'}`} />
+
+                  {renamingId === chat.id ? (
+                    <input
+                      ref={renameInputRef}
+                      value={renameValue}
+                      onChange={e => setRenameValue(e.target.value)}
+                      onBlur={commitRename}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') commitRename();
+                        if (e.key === 'Escape') setRenamingId(null);
+                      }}
+                      onClick={e => e.stopPropagation()}
+                      className="rename-input flex-1 min-w-0 text-xs text-white"
+                    />
+                  ) : (
+                    <span className={`flex-1 min-w-0 text-xs truncate ${chat.id === activeChatId ? 'text-white font-medium' : 'text-slate-400 group-hover:text-slate-300'}`}>
+                      {chat.title}
+                    </span>
+                  )}
+
+                  {/* Action buttons — shown on hover or active */}
+                  <div className={`flex items-center gap-0.5 shrink-0 transition-opacity ${chat.id === activeChatId ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    <button
+                      title="Rename"
+                      onClick={e => { e.stopPropagation(); startRename(chat); }}
+                      className="p-1 rounded-md hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+                    >
+                      <FiEdit2 className="w-3 h-3" />
+                    </button>
+                    <button
+                      title="Delete"
+                      onClick={e => { e.stopPropagation(); deleteChat(chat.id); }}
+                      className="p-1 rounded-md hover:bg-red-500/15 text-slate-500 hover:text-red-400 transition-colors cursor-pointer"
+                    >
+                      <FiTrash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Settings Section */}
+          <div className="flex-shrink-0 border-t border-white/10 p-3 space-y-3 bg-black/20 max-h-[45vh] overflow-y-auto custom-scroll">
+            {/* System Prompt */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">System Prompt</label>
+              <textarea
+                value={activeChat.systemPrompt}
+                onChange={e => updateActiveChat(() => ({ systemPrompt: e.target.value }))}
+                rows="3"
+                className="w-full p-2.5 rounded-lg bg-black/30 border border-white/5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500/40 resize-none leading-relaxed overflow-y-auto custom-scroll"
+                placeholder="Configure assistant personality..."
+              />
+            </div>
+
+            {/* Clear conversation button */}
+            <button
+              onClick={clearActiveChat}
+              disabled={activeChat.messages.length === 0}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-white/10 hover:border-red-500/30 hover:bg-red-500/10 text-xs font-medium text-slate-300 hover:text-red-200 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+            >
+              <FiTrash2 className="w-3.5 h-3.5" />
+              Clear Conversation
+            </button>
+
+            {/* Profile Card */}
+            <div className="flex items-center justify-between pt-2 border-t border-white/5">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <img
+                  src="/avatar.png"
+                  alt="Avatar"
+                  className="w-8 h-8 rounded-full border border-white/10 object-cover shadow-sm"
+                />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-white truncate leading-none">Local Developer</p>
+                  <p className="text-[9px] text-slate-500 mt-1 font-mono leading-none">Workspace Active</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
                 <button
-                  title="Delete"
-                  onClick={e => { e.stopPropagation(); deleteChat(chat.id); }}
-                  className="p-1 rounded-md hover:bg-red-500/15 text-slate-500 hover:text-red-400 transition-colors cursor-pointer"
+                  onClick={handleSettingsClick}
+                  className="relative p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  title="System Prompt Settings"
                 >
-                  <FiTrash2 className="w-3 h-3" />
+                  <FiSettings className="w-4 h-4" />
+                  <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-blue-500 rounded-full border border-[#090714]" />
                 </button>
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* Settings Section */}
-        <div className="flex-shrink-0 border-t border-white/10 p-3 space-y-3 overflow-y-auto custom-scroll max-h-[45vh]">
-          {/* System Prompt */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">System Prompt</label>
-            <textarea
-              value={activeChat.systemPrompt}
-              onChange={e => updateActiveChat(() => ({ systemPrompt: e.target.value }))}
-              rows="3"
-              className="w-full p-2.5 rounded-lg bg-black/20 border border-white/5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500/40 resize-none leading-relaxed overflow-y-auto custom-scroll"
-              placeholder="Configure assistant personality..."
-            />
+            {/* Footer version */}
+            <div className="text-[10px] text-slate-600 flex justify-between px-1 pt-0.5">
+              <span>v0.2.78 (WebLLM)</span>
+              <a href="https://github.com/mlc-ai/web-llm" target="_blank" className="hover:underline flex items-center gap-0.5 text-indigo-400/80 hover:text-indigo-400">
+                Docs <FiExternalLink className="w-2.5 h-2.5" />
+              </a>
+            </div>
           </div>
 
-          {/* Clear + footer */}
-          <button
-            onClick={clearActiveChat}
-            disabled={activeChat.messages.length === 0}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-white/10 hover:border-red-500/30 hover:bg-red-500/10 text-xs font-medium text-slate-300 hover:text-red-200 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
-          >
-            <FiTrash2 className="w-3.5 h-3.5" />
-            Clear Conversation
-          </button>
-
-          <div className="text-[10px] text-slate-500 flex justify-between px-1">
-            <span>v0.2.78 (WebLLM)</span>
-            <a href="https://github.com/mlc-ai/web-llm" target="_blank" className="hover:underline flex items-center gap-0.5 text-indigo-400">
-              Docs <FiExternalLink className="w-2.5 h-2.5" />
-            </a>
-          </div>
         </div>
       </div>
 
@@ -609,6 +830,16 @@ const App = () => {
         {/* Chat title bar (desktop) */}
         <div className="hidden lg:flex items-center justify-between px-6 py-3 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-2">
+            {/* Re-expand button shown only when sidebar is collapsed */}
+            {sidebarCollapsed && (
+              <button
+                onClick={() => setSidebarCollapsed(false)}
+                className="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors mr-1"
+                title="Expand sidebar"
+              >
+                <FiMenu className="w-4 h-4" />
+              </button>
+            )}
             <FiMessageSquare className="w-4 h-4 text-indigo-400" />
             <span className="text-sm font-semibold text-white truncate max-w-xs">{activeChat.title}</span>
             <span className="text-[10px] text-slate-500 font-mono ml-1">
@@ -626,7 +857,7 @@ const App = () => {
           {activeChat.messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 max-w-2xl mx-auto">
               <div className="p-4 rounded-3xl bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 border border-white/10 mb-6 glow-indigo animate-pulse">
-                <RiSparkling2Line className="text-5xl text-indigo-400" />
+                <SparkleLogo className="w-12 h-12" />
               </div>
               <h2 className="text-3xl font-bold tracking-tight text-white mb-2">Welcome to LLM Studio</h2>
               <p className="text-slate-400 text-sm mb-8 leading-relaxed">
