@@ -70,4 +70,43 @@
 /* Smooth custom-scroll selector */
 .custom-scroll {
   scrollbar-gutter: stable;
+}
+
+/* Chat list item */
+.chat-item {
+  position: relative;
+  animation: slideInChat 0.18s ease-out both;
+}
+
+.chat-item-active {
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.chat-item-active:hover {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+/* Inline rename input */
+.rename-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.5);
+  outline: none;
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 0 2px;
+  width: 100%;
+}
+
+/* Slide-in animation for new chat entries */
+@keyframes slideInChat {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
